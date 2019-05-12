@@ -1,0 +1,47 @@
+/* DynCopy.p -- test procedure for COPY-DATASET to a dynamic Target. */
+{dsOrderTT.i}
+{dsOrder.i}
+
+DEFINE VARIABLE hDataSet2 AS HANDLE NO-UNDO.
+DEFINE VARIABLE hQuery2   AS HANDLE NO-UNDO.
+DEFINE VARIABLE hBuffer2  AS HANDLE NO-UNDO.
+
+DEFINE QUERY qOrder FOR Order.
+
+DEFINE DATA-SOURCE srcOrder FOR QUERY qOrder.
+DEFINE DATA-SOURCE srcOline FOR OrderLine.
+DEFINE DATA-SOURCE srcItem  FOR ITEM.
+
+QUERY qOrder:QUERY-PREPARE("FOR EACH Order WHERE Order.custnum = 1").
+
+BUFFER ttOrder:ATTACH-DATA-SOURCE(DATA-SOURCE srcOrder:HANDLE).
+BUFFER ttOline:ATTACH-DATA-SOURCE(DATA-SOURCE srcOline:HANDLE).
+BUFFER ttItem:ATTACH-DATA-SOURCE(DATA-SOURCE srcItem:HANDLE).
+
+DATASET dsOrder:FILL().
+
+FOR EACH ttOrder:
+  DISPLAY "Original Order: " ttOrder.OrderNum ttOrder.CustNum
+    WITH FRAME Order1 20 DOWN.
+END.
+
+CREATE DATASET hDataSet2.
+hDataSet2:COPY-DATASET(DATASET dsOrder:HANDLE).
+
+CREATE QUERY hQuery2.
+hQuery2:ADD-BUFFER(hDataSet2:GET-BUFFER-HANDLE(1)).
+
+/* Note: the buffer name is cpy_ttOrder: */
+hQuery2:QUERY-PREPARE("FOR EACH " + hDataSet2:GET-BUFFER-HANDLE(1):NAME).
+hQuery2:QUERY-OPEN().
+hQuery2:GET-FIRST().
+hBuffer2 = hQuery2:GET-BUFFER-HANDLE.
+ 
+DO WHILE NOT hQuery2:QUERY-OFF-END:
+  DISPLAY "Copy of Order: "
+    hBuffer2:BUFFER-FIELD("OrderNum"):BUFFER-VALUE COLUMN-LABEL "OrderNum"
+    hBuffer2:BUFFER-FIELD("CustNum"):BUFFER-VALUE COLUMN-LABEL "CustNum"
+    WITH FRAME Order2 20 DOWN.
+  hQuery2:GET-NEXT().
+  DOWN WITH FRAME Order2.
+END.
