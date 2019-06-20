@@ -42,6 +42,3 @@ DO iEntry = 1 TO phDataSet:NUM-BUFFERS:
   hBuffer = phDataSet:GET-BUFFER-HANDLE(iEntry).
   DELETE OBJECT hBuffer:DATA-SOURCE.
 END.
-
-
-/***** as;dlfas;ldkjasd;lfjsad;lkjsadf;kljasdf;klj******/
